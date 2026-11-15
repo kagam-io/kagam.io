@@ -1,0 +1,154 @@
+/* contact ページだけの見た目 */
+/* 連絡先の一覧: 左に「どこで」、右に宛先。行の間は区切り線 */
+.contacts {
+  margin: 8px 0 0;
+}
+.contact {
+  display: grid;
+  grid-template-columns: 6em 1fr;
+  align-items: center;
+  gap: 16px;
+  min-height: 48px;
+  border-top: 2px solid var(--line-soft);
+}
+.contact:last-child {
+  border-bottom: 2px solid var(--line-soft);
+}
+.contact dt {
+  color: var(--accent);
+}
+.contact dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.contact .todo {
+  color: var(--text-3);
+}
+@media (orientation: portrait) {
+  .contact {
+    grid-template-columns: 5em 1fr;
+    gap: 12px;
+  }
+}
+
+/* ---- フォーム ---- */
+.form {
+  display: grid;
+  gap: 16px;
+  margin-top: 8px;
+}
+.field {
+  display: grid;
+  gap: 4px;
+}
+.field label {
+  color: var(--text-2);
+  font-size: 13px;
+}
+.field .opt {
+  margin-left: 8px;
+  color: var(--text-3);
+}
+/* 入力欄: パネルより一段暗い面に、2px の枠 */
+.form input,
+.form textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 0;
+  background: rgba(14, 11, 34, 0.55);
+  box-shadow: inset 0 0 0 2px var(--line);
+  color: var(--text-1);
+  font: inherit;
+  font-size: 16px; /* 16px 未満だと iPhone が入力時に勝手に拡大する */
+  line-height: 1.6;
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: box-shadow 0.15s;
+}
+.form textarea {
+  min-height: 144px;
+  resize: vertical;
+}
+.form input::placeholder,
+.form textarea::placeholder {
+  color: var(--text-3);
+}
+.form input:focus,
+.form textarea:focus {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+/* わなの欄 (人には見えない。ロボットだけが埋める) */
+.trap {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.form-foot {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+/* 送信ボタン: パネルと同じ白い枠 + 右下に1ドットの影 */
+.send {
+  min-height: 40px;
+  padding: 0 24px;
+  border: 0;
+  background: var(--frame);
+  box-shadow: 4px 4px 0 var(--frame-dark);
+  color: #221d45;
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.15s, transform 0.08s, box-shadow 0.08s;
+}
+.send:hover {
+  background: var(--text-1);
+}
+.send:active {
+  transform: translate(2px, 2px); /* 押すと影の分だけ沈む */
+  box-shadow: 2px 2px 0 var(--frame-dark);
+}
+.send:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+.send:focus:not(:focus-visible) {
+  outline: none;
+}
+.send:focus-visible {
+  box-shadow: 4px 4px 0 var(--frame-dark), 0 0 0 2px var(--accent);
+}
+.form-status {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 13px;
+}
+.form-note {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 13px;
+}
+.form-status.error {
+  color: var(--accent);
+}
+.thanks {
+  margin-top: 8px;
+}
+.thanks[hidden], .form[hidden] {
+  display: none;
+}
+.cf-turnstile:empty {
+  display: none;
+}
+.window .others {
+  margin-top: 40px;
+}

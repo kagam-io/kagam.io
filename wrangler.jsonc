@@ -1,0 +1,38 @@
+// Cloudflare Workers の設定。デプロイ: npx wrangler deploy / 手元で確認: npx wrangler dev
+// このファイルは公開リポジトリに入るので、個人情報 (受け取り用のメールアドレスなど) は書かない。
+// 非公開の値は「シークレット」に入れる:
+//   npx wrangler secret put CONTACT_TO        … お問い合わせの届け先 (Email Routing で確認済みのアドレス)
+//   npx wrangler secret put TURNSTILE_SECRET  … Turnstile のシークレットキー
+// (wrangler dev で試すときは .dev.vars に書く。見本は .dev.vars.example)
+{
+  "name": "kagam-io",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-10-01",
+
+  // お問い合わせフォームのメール送信 (Cloudflare の Email Routing)。
+  // 届け先はここに書かず、シークレット CONTACT_TO で渡す (Email Routing で確認済みのアドレスにだけ送れる)
+  "send_email": [
+    { "name": "SEND_EMAIL" }
+  ],
+
+  // お問い合わせの送信回数の制限: 同じ送り元 (IP) から 60 秒に 3 通まで
+  "ratelimits": [
+    { "name": "CONTACT_LIMITER", "namespace_id": "1001", "simple": { "limit": 3, "period": 60 } }
+  ],
+
+  "vars": {
+    // 送り元。Email Routing を有効にしたドメイン (kagam.io) のアドレス。公開されても困らないもの
+    "CONTACT_FROM": "contact@kagam.io"
+  },
+
+  // このフォルダを静的ファイルとして配信する (配信しないものは .assetsignore に書く)
+  "assets": {
+    "directory": ".",
+    "binding": "ASSETS",
+    "html_handling": "auto-trailing-slash",   // /about.html は /about で開く
+    "not_found_handling": "404-page"          // 無いページは 404.html を 404 で返す
+  },
+
+  // エラーなどのログを Cloudflare の画面で見られるようにする
+  "observability": { "enabled": true }
+}

@@ -1,0 +1,16 @@
+.DS_Store
+
+.dev.vars
+.env
+
+.wrangler/
+node_modules/
+__pycache__/
+*.log
+
+_old/
+
+# 手元の確認用 (公開しない)
+devserver.py
+tools/timeline-dev.mjs
+.dev.vars.example

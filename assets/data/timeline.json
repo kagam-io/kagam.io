@@ -1,0 +1,15 @@
+[
+  {
+    "date": "2026-11-15",
+    "type": "release",
+    "title": "kagam.io",
+    "desc": "この個人サイト。ドット絵の夕暮れの中で、波やオブジェがドット単位で動きます。",
+    "tags": [
+      "HTML",
+      "CSS",
+      "JavaScript",
+      "Canvas",
+      "Cloudflare Workers"
+    ]
+  }
+]

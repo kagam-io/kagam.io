@@ -1,0 +1,205 @@
+/* ゲームのウィンドウ風パネル (About / Works 共通) */
+/*
+  ゲームのウィンドウ風のパネル。位置と大きさは scene.js が渡す
+  --dot (絵の1ドットの大きさ) と --nav-bottom (メニューの下端) を基準にする。
+*/
+/* scene.js が値を入れるまでの仮の値 */
+:root {
+  --dot: 0.78vw;
+  --nav-bottom: 64px;
+  --sea-top: 80vh;
+  --view-height: 100vh;
+}
+.window {
+  --u: 4px;                 /* 枠の1ドット */
+  --frame: #e6d9ee;
+  --frame-dark: #2c2552;
+  /*
+    パネルの色は役割で使う (同じ役割には同じ色)
+      文字: 主 / 副 (日付・補足) / 控えめ (選ばれていないもの)
+      強調: 見出しと小見出し (夕焼けのピンク)
+      線:   タグの枠・年表の点線 / 区切り線
+  */
+  --text-1: #fff3df;
+  --text-2: #c9bfe0;
+  --text-3: #6f6890;
+  --accent: #f2c6cf;
+  --line: #6d6299;
+  --line-soft: #4a4178;
+  --gap-top: calc(var(--dot) * 4);    /* メニューとの間 */
+  --gap-bottom: calc(var(--dot) * 3); /* 水平線との間 */
+  position: absolute;
+  z-index: 1;
+  box-sizing: border-box;
+  left: calc(var(--dot) * 6);
+  top: calc(var(--nav-bottom) + var(--gap-top));
+  width: min(calc(var(--dot) * 54), calc(100vw - var(--dot) * 12));
+  /* 水平線の少し上まで伸ばす (中身が長ければパネルの中でスクロール) */
+  height: calc(var(--sea-top) - var(--nav-bottom) - var(--gap-top) - var(--gap-bottom));
+  overflow: hidden;
+  display: flex;
+  background: rgba(34, 29, 69, 0.92);
+  color: var(--text-1);
+  font-family: 'DotGothic16', ui-monospace, 'Hiragino Kaku Gothic ProN', monospace;
+  font-size: 16px;
+  line-height: 1.75;
+  /* 角まで埋まったドット枠 + 右下に1ドットの影 */
+  box-shadow:
+    0 0 0 var(--u) var(--frame),
+    var(--u) var(--u) 0 var(--u) var(--frame-dark);
+  /* 背景の絵を描き終える (scene-ready) まで待ってから開く (背景より先に出たり、大きさが途中で変わったりしないように) */
+  visibility: hidden;
+}
+.scene-ready .window {
+  visibility: visible;
+  animation: window-open 0.32s steps(6, end) both;
+}
+/* 中身のスクロール領域。ブラウザ標準のスクロールバーは隠し、自前のものを出す */
+.window-body {
+  touch-action: pan-y; /* パネルの中だけは縦にスクロールできる */
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--body-padding, 28px 40px 32px 32px);
+  scrollbar-width: none;
+}
+.window-body::-webkit-scrollbar {
+  display: none;
+}
+/*
+  自前のスクロールバー (PC もスマホも同じ見た目)。白一色の四角いつまみだけ。
+  位置と長さは下の script が4px刻みで合わせる
+*/
+.scrollbar {
+  position: absolute;
+  top: 12px;
+  right: 8px;
+  bottom: 12px;
+  width: 8px;
+}
+.scrollbar[hidden] {
+  display: none;
+}
+.scrollbar .thumb {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  background: var(--frame);
+  cursor: grab;
+  touch-action: none;
+}
+.scrollbar .thumb:active {
+  cursor: grabbing;
+}
+
+/* カクカクと上下に開く */
+@keyframes window-open {
+  from { clip-path: inset(50% -12px 50% -12px); }
+  to   { clip-path: inset(-12px -12px -12px -12px); }
+}
+.window > * {
+  animation: window-content 0s 0.32s both;
+}
+@keyframes window-content {
+  from { visibility: hidden; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .window, .window > * { animation: none; }
+}
+
+/* スマホ (縦長): 横幅いっぱい、海の手前まで */
+@media (orientation: portrait) {
+  .window {
+    left: calc(var(--dot) * 4);
+    width: calc(100vw - var(--dot) * 8);
+    --gap-top: calc(var(--dot) * 5);
+    --body-padding: 20px 24px 24px 20px;
+  }
+}
+
+.window h1 {
+  margin: 0;
+  font-size: 32px;
+  font-weight: normal;
+  line-height: 1.2;
+}
+.window .lead {
+  margin: 4px 0 0;
+  color: var(--accent);
+}
+.window h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 28px 0 8px;
+  font-size: 16px;
+  font-weight: normal;
+  color: var(--accent);
+}
+/* 見出しの前の四角いドット */
+.window h2::before {
+  content: '';
+  flex: none;
+  width: 8px;
+  height: 8px;
+  background: currentColor;
+}
+
+.window p,
+.window ul,
+.window dl {
+  margin: 0;
+}
+.window ul {
+  padding: 0;
+  list-style: none;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.tags li {
+  padding: 0 8px;
+  box-shadow: inset 0 0 0 2px var(--line);
+}
+/* 並びの最後の「など」は、タグではなく控えめな文字で添える */
+.tags li.more {
+  padding: 0;
+  box-shadow: none;
+  color: var(--text-2);
+}
+
+/* 外部リンク (.links の中の a、または a.ext) */
+.links a, a.ext {
+  color: var(--text-1);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+.links li + li {
+  margin-top: 4px;
+}
+.links a, a.ext {
+  display: inline-block;
+  padding: 2px 0;             /* 指で押しやすいよう少しだけ広げる */
+  -webkit-tap-highlight-color: transparent;
+}
+/* 外部リンクの印: ドットの矢印 (↗) */
+.links a::after, a.ext::after {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-left: 8px;
+  background: currentColor;
+  clip-path: polygon(20% 0, 100% 0, 100% 80%, 80% 80%, 80% 34%, 14% 100%, 0 86%, 66% 20%, 20% 20%);
+}
+.links a:hover, a.ext:hover {
+  color: var(--accent);
+}
+.links a:focus:not(:focus-visible), a.ext:focus:not(:focus-visible) {
+  outline: none;
+}

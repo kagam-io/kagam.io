@@ -1,0 +1,12 @@
+/* 404 ページだけの見た目 */
+.notfound-text {
+  margin-top: 24px !important;
+}
+.notfound-home {
+  margin-top: 16px !important;
+}
+.notfound-home a {
+  color: var(--text-1);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}

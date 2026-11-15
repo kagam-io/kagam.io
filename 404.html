@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#383262" media="(orientation: portrait)">
+<meta name="theme-color" content="#393669" media="(orientation: landscape)">
+<title>ページが見つかりません — kagam.io</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/assets/icons/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/icons/favicon-16.png">
+<link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- フォントの CSS は、ほかの読み込みやスクリプトを待たせない (読めた時点でドット風フォントに切り替わる) -->
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" media="print" onload="this.media='all'">
+<!-- 背景の画像 (画面の向きに合うほう) とスクリプトを、最初から読み始める -->
+<link rel="preload" as="image" href="/assets/img/scene/pc/sky.png" media="(orientation: landscape)">
+<link rel="preload" as="image" href="/assets/img/scene/pc/object.png" media="(orientation: landscape)">
+<link rel="preload" as="image" href="/assets/img/scene/pc/sea_01.png" media="(orientation: landscape)">
+<link rel="preload" as="image" href="/assets/img/scene/pc/sea_02.png" media="(orientation: landscape)">
+<link rel="preload" as="image" href="/assets/img/scene/pc/sea_03.png" media="(orientation: landscape)">
+<link rel="preload" as="image" href="/assets/img/scene/mobile/sky.png" media="(orientation: portrait)">
+<link rel="preload" as="image" href="/assets/img/scene/mobile/object.png" media="(orientation: portrait)">
+<link rel="preload" as="image" href="/assets/img/scene/mobile/sea_01.png" media="(orientation: portrait)">
+<link rel="preload" as="image" href="/assets/img/scene/mobile/sea_02.png" media="(orientation: portrait)">
+<link rel="preload" as="image" href="/assets/img/scene/mobile/sea_03.png" media="(orientation: portrait)">
+<link rel="modulepreload" href="/assets/js/main.js">
+<link rel="modulepreload" href="/assets/js/scene.js">
+<link rel="modulepreload" href="/assets/js/config.js">
+<link rel="modulepreload" href="/assets/js/font.js">
+<link rel="modulepreload" href="/assets/js/sea.js">
+<link rel="modulepreload" href="/assets/js/nav.js">
+<link rel="modulepreload" href="/assets/js/info.js">
+<link rel="modulepreload" href="/assets/js/touch.js">
+<link rel="stylesheet" href="/assets/css/scene.css">
+<link rel="stylesheet" href="/assets/css/panel.css">
+<link rel="stylesheet" href="/assets/css/pages/notfound.css">
+</head>
+<body data-page="notfound">
+<canvas id="c"></canvas>
+<nav class="nav" aria-label="メニュー"></nav>
+
+<main class="window">
+<div class="window-body" data-scroll>
+  <h1>404</h1>
+  <p class="lead">ページが見つかりません</p>
+  <p class="notfound-text">URL が変わったか、ページがなくなったのかもしれません。</p>
+  <p class="notfound-home"><a href="/">トップに戻る</a></p>
+</div>
+<div class="scrollbar" aria-hidden="true" hidden><div class="thumb"></div></div>
+</main>
+
+<script type="module" src="/assets/js/main.js"></script>
+<script type="module" src="/assets/js/panel.js"></script>
+</body>
+</html>

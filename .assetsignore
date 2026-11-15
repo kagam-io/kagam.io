@@ -1,0 +1,15 @@
+# 静的ファイルとして配信しないもの
+src/
+tools/
+devserver.py
+wrangler.jsonc
+.assetsignore
+.wrangler/
+node_modules/
+__pycache__/
+.DS_Store
+.gitignore
+.dev.vars
+.dev.vars.example
+_old/
+README.md

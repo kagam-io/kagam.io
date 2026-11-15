@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#383262" media="(orientation: portrait)">
+<meta name="theme-color" content="#393669" media="(orientation: landscape)">
+<title>Contact — kagam.io</title>
+<meta name="description" content="Kagami への連絡先とお問い合わせフォーム。">
+<link rel="canonical" href="https://kagam.io/contact">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="kagam.io">
+<meta property="og:title" content="Contact — kagam.io">
+<meta property="og:description" content="Kagami への連絡先とお問い合わせフォーム。">
+<meta property="og:url" content="https://kagam.io/contact">
+<meta property="og:image" content="https://kagam.io/assets/img/og.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="720">
+<meta property="og:image:alt" content="ドット絵の夕暮れの海に浮かぶオブジェと、Kagam.io の文字">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@kagam_10">
+<meta name="twitter:creator" content="@kagam_10">
+<link rel="icon" href="/assets/icons/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/icons/favicon-16.png">
+<link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- フォントの CSS は、ほかの読み込みやスクリプトを待たせない (読めた時点でドット風フォントに切り替わる) -->
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" media="print" onload="this.media='all'">
+<!-- 背景の画像 (画面の向きに合うほう) とスクリプトを、最初から読み始める -->
+<link rel="preload" as="image" href="/assets/img/scene/pc/sky.png" media="(orientation: landscape)">
+<link rel="preload" as="image" href="/assets/img/scene/pc/object.png" media="(orientation: landscape)">
+<link rel="preload" as="image" href="/assets/img/scene/pc/sea_01.png" media="(orientation: landscape)">
+<link rel="preload" as="image" href="/assets/img/scene/pc/sea_02.png" media="(orientation: landscape)">
+<link rel="preload" as="image" href="/assets/img/scene/pc/sea_03.png" media="(orientation: landscape)">
+<link rel="preload" as="image" href="/assets/img/scene/mobile/sky.png" media="(orientation: portrait)">
+<link rel="preload" as="image" href="/assets/img/scene/mobile/object.png" media="(orientation: portrait)">
+<link rel="preload" as="image" href="/assets/img/scene/mobile/sea_01.png" media="(orientation: portrait)">
+<link rel="preload" as="image" href="/assets/img/scene/mobile/sea_02.png" media="(orientation: portrait)">
+<link rel="preload" as="image" href="/assets/img/scene/mobile/sea_03.png" media="(orientation: portrait)">
+<link rel="modulepreload" href="/assets/js/main.js">
+<link rel="modulepreload" href="/assets/js/scene.js">
+<link rel="modulepreload" href="/assets/js/config.js">
+<link rel="modulepreload" href="/assets/js/font.js">
+<link rel="modulepreload" href="/assets/js/sea.js">
+<link rel="modulepreload" href="/assets/js/nav.js">
+<link rel="modulepreload" href="/assets/js/info.js">
+<link rel="modulepreload" href="/assets/js/touch.js">
+<link rel="stylesheet" href="/assets/css/scene.css">
+<link rel="stylesheet" href="/assets/css/panel.css">
+<!-- Turnstile (Cloudflare の目に見えない人間確認) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<link rel="stylesheet" href="/assets/css/pages/contact.css">
+</head>
+<body data-page="contact">
+<canvas id="c"></canvas>
+<nav class="nav" aria-label="メニュー"></nav>
+
+<main class="window">
+<div class="window-body" data-scroll>
+  <h1>Contact</h1>
+  <p class="lead">連絡はこちらから</p>
+
+  <section>
+    <h2>メッセージを送る</h2>
+    <form class="form" id="contact-form" novalidate>
+      <div class="field">
+        <label for="f-name">お名前<span class="opt">任意</span></label>
+        <input id="f-name" name="name" type="text" maxlength="60" autocomplete="name">
+      </div>
+      <div class="field">
+        <label for="f-email">返信先のメールアドレス<span class="opt">任意</span></label>
+        <input id="f-email" name="email" type="email" maxlength="120" autocomplete="email" inputmode="email">
+      </div>
+      <div class="field">
+        <label for="f-message">内容</label>
+        <textarea id="f-message" name="message" maxlength="3000" required></textarea>
+      </div>
+      <div class="trap" aria-hidden="true">
+        <!-- ロボットだけが埋めるわなの欄。自動入力が反応しないよう、ありふれた名前 (website など) にしない -->
+        <label for="f-leave-empty">この欄は空のままにしてください</label>
+        <input id="f-leave-empty" name="leave_empty" type="text" tabindex="-1" autocomplete="off">
+      </div>
+      <!--
+        Turnstile の部品。data-sitekey は Cloudflare の画面で発行した「サイトキー」。
+        サイトキーは HTML で誰にでも見える値なので、公開してよい (秘密のキーは TURNSTILE_SECRET)。
+        interaction-only: ふだんは見えず、確認が必要なときだけ表示される
+      -->
+      <div class="cf-turnstile" data-sitekey="0x4AAAAAAGA3yu02D2LirGVR" data-theme="dark" data-appearance="interaction-only" data-size="flexible"></div>
+      <div class="form-foot">
+        <button class="send" type="submit">送信</button>
+        <p class="form-status" id="form-status" role="status"></p>
+      </div>
+      <p class="form-note">送っていただいた内容は、返信のためだけに使います。</p>
+    </form>
+    <div class="thanks" id="thanks" hidden>
+      <p>送信しました。ありがとうございます。</p>
+    </div>
+  </section>
+
+  <section class="others">
+    <h2>ほかの連絡先</h2>
+  <dl class="contacts">
+    <div class="contact">
+      <dt>X</dt>
+      <dd><a class="ext" href="https://x.com/kagam_10" target="_blank" rel="noopener">@kagam_10</a></dd>
+    </div>
+    <div class="contact">
+      <dt>GitHub</dt>
+      <dd><a class="ext" href="https://github.com/kagam-io" target="_blank" rel="noopener">kagam-io</a></dd>
+    </div>
+    <div class="contact">
+      <dt>Zenn</dt>
+      <dd><a class="ext" href="https://zenn.dev/kagam_io" target="_blank" rel="noopener">kagam_io</a></dd>
+    </div>
+  </dl>
+  </section>
+</div>
+<div class="scrollbar" aria-hidden="true" hidden><div class="thumb"></div></div>
+</main>
+
+<script type="module" src="/assets/js/main.js"></script>
+<script type="module" src="/assets/js/panel.js"></script>
+<script type="module" src="/assets/js/pages/contact.js"></script>
+</body>
+</html>

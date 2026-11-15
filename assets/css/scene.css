@@ -1,0 +1,410 @@
+/* 背景シーン (トップ / About 共通) */
+html, body {
+  margin: 0;
+  height: 100%;
+  /* 1画面のページなのでスクロールさせない (バーの裏へはみ出した絵は画面の端で切れる) */
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+/*
+  iPhone の Safari は、ステータスバーと下のバーの裏を「ページの背景色」1色で塗る
+  (グラデーションは読めず白になる)。絵の上下の端をこの色に溶かして境目を消す。
+  色は SCENES の edge と同じにすること。
+*/
+html, body { background-color: #383262; }
+@media (orientation: landscape) {
+  html, body { background-color: #393669; }
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+canvas {
+  /*
+    画面に固定 (position: fixed) すると、iPhone の Safari は下のバーの手前で絵を止めてしまう。
+    ページの一部として置くと、半透明のバーの裏まで絵が描かれる。
+  */
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100lvh;
+  object-fit: cover;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  /*
+    絵が届くまでの間に見せる、空と海の色の横帯 (絵の行ごとの平均色)。
+    絵を描いたら上から覆われる。紺一色の画面にならないように
+  */
+  background: linear-gradient(to bottom, #4c4a82 0.0% 5.56%, #4d4b83 5.56% 11.11%, #504d86 11.11% 16.67%, #555088 16.67% 22.22%, #54508a 22.22% 27.78%, #5a538d 27.78% 33.33%, #59548f 33.33% 38.89%, #5d5693 38.89% 44.44%, #635997 44.44% 50.0%, #705f9a 50.0% 55.56%, #8a689b 55.56% 61.11%, #9c6f9c 61.11% 66.67%, #b27798 66.67% 72.22%, #c68093 72.22% 77.78%, #cd8a94 77.78% 83.33%, #795783 83.33% 88.89%, #72547c 88.89% 94.44%, #534371 94.44% 100.0%);
+}
+/* iPhone / iPad の Safari だけ、下のバーの裏まで絵を伸ばす (バーの高さぶんはみ出させる) */
+@supports (-webkit-touch-callout: none) {
+  canvas { height: calc(100lvh + 22vh); }
+}
+.nav a {
+  position: absolute;
+  color: transparent;
+  font-size: 1px;
+  overflow: hidden;
+  border-radius: 2px;
+  -webkit-tap-highlight-color: transparent;
+}
+.nav a:focus:not(:focus-visible) {
+  outline: none;
+}
+/*
+  キーボード (Tab キー) で選んだときだけ白い枠を出す。マウスのクリックでは出ない
+*/
+:focus-visible {
+  outline: 2px solid #fff3df;
+  outline-offset: 2px;
+}
+/* ページを指で動かしたり、拡大・縮小したりできないようにする (スクロールできる部分は個別に許可) */
+html, body {
+  touch-action: none;
+}
+/* 文字選択や長押しメニュー (画像の保存など) を出さない */
+body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/*
+  ---- 右下の i ボタン (全ページ共通) ----
+  閉じているときは 7×7 ドットの丸。その形のまま右下を起点に上・左へ伸びて、
+  角が階段状に丸いパネルになる。大きさのアニメーションは scene.js で行う。
+*/
+.info {
+  /*
+    色は役割で使う (サイト本体と違い、目立たない灰色の小窓)
+      --info-text:   本文・質問
+      --info-text-2: 見出し・リンク・開いているときの i
+      --info-muted:  縁・三角・著作権表記
+      --info-hi:     マウスを乗せたとき
+  */
+  --info-text: #e4e1ee;
+  --info-text-2: #c3bed6;
+  --info-muted: #8f8aa6;
+  --info-hi: #ffffff;
+  --info-gray: var(--info-muted);
+  --info-gray-light: var(--info-text-2);
+  /*
+    大きさは背景の絵の1ドット (--dot、scene.js が入れる) を基準にする。
+    ブラウザで拡大・縮小しても、絵やメニューと同じ比率のまま変わらない
+  */
+  --info-dots: 2.5;                                        /* ボタンの大きさ = 絵の何ドット分か */
+  --info-size: calc(var(--dot, 11px) * var(--info-dots));  /* PC (1440px 幅) で約 28px */
+  --iu: calc(var(--info-size) / 14);                       /* ボタンの1ドット (丸は 14×14 ドット) */
+  position: fixed;
+  right: calc(var(--iu) * 8 + env(safe-area-inset-right, 0px));
+  bottom: calc(var(--iu) * 8 + env(safe-area-inset-bottom, 0px));
+  z-index: 10;
+  color: var(--info-text);
+  font-family: 'DotGothic16', ui-monospace, monospace;
+  opacity: 0.75;
+  transition: opacity 0.15s;
+  /*
+    角を丸く切り落とした形。ボタンの1ドット (--iu) ごとの段で、14×14 ドットの円と同じ輪郭になる
+    (閉じているときはドットの丸、開いたときは角の丸いパネル)
+      外側 (= 縁の外形): 上の行から 5・3・2・1・1 ドット切り込む
+      内側 (= 中の暗い部分、縁の1ドット内側): 4・2・1・1 ドット
+  */
+  --round-outer: polygon(
+    calc(100% - var(--iu) * 5) 0px, calc(100% - var(--iu) * 5) calc(var(--iu) * 1), calc(100% - var(--iu) * 3) calc(var(--iu) * 1), calc(100% - var(--iu) * 3) calc(var(--iu) * 2),
+    calc(100% - var(--iu) * 2) calc(var(--iu) * 2), calc(100% - var(--iu) * 2) calc(var(--iu) * 3), calc(100% - var(--iu) * 1) calc(var(--iu) * 3), calc(100% - var(--iu) * 1) calc(var(--iu) * 4),
+    calc(100% - var(--iu) * 1) calc(var(--iu) * 5), 100% calc(var(--iu) * 5), 100% calc(100% - var(--iu) * 5), calc(100% - var(--iu) * 1) calc(100% - var(--iu) * 5),
+    calc(100% - var(--iu) * 1) calc(100% - var(--iu) * 4), calc(100% - var(--iu) * 1) calc(100% - var(--iu) * 3), calc(100% - var(--iu) * 2) calc(100% - var(--iu) * 3), calc(100% - var(--iu) * 2) calc(100% - var(--iu) * 2),
+    calc(100% - var(--iu) * 3) calc(100% - var(--iu) * 2), calc(100% - var(--iu) * 3) calc(100% - var(--iu) * 1), calc(100% - var(--iu) * 5) calc(100% - var(--iu) * 1), calc(100% - var(--iu) * 5) 100%,
+    calc(var(--iu) * 5) 100%, calc(var(--iu) * 5) calc(100% - var(--iu) * 1), calc(var(--iu) * 3) calc(100% - var(--iu) * 1), calc(var(--iu) * 3) calc(100% - var(--iu) * 2),
+    calc(var(--iu) * 2) calc(100% - var(--iu) * 2), calc(var(--iu) * 2) calc(100% - var(--iu) * 3), calc(var(--iu) * 1) calc(100% - var(--iu) * 3), calc(var(--iu) * 1) calc(100% - var(--iu) * 4),
+    calc(var(--iu) * 1) calc(100% - var(--iu) * 5), 0px calc(100% - var(--iu) * 5), 0px calc(var(--iu) * 5), calc(var(--iu) * 1) calc(var(--iu) * 5),
+    calc(var(--iu) * 1) calc(var(--iu) * 4), calc(var(--iu) * 1) calc(var(--iu) * 3), calc(var(--iu) * 2) calc(var(--iu) * 3), calc(var(--iu) * 2) calc(var(--iu) * 2),
+    calc(var(--iu) * 3) calc(var(--iu) * 2), calc(var(--iu) * 3) calc(var(--iu) * 1), calc(var(--iu) * 5) calc(var(--iu) * 1), calc(var(--iu) * 5) 0px
+  );
+  --round-inner: polygon(
+    calc(100% - var(--iu) * 4) 0px, calc(100% - var(--iu) * 4) calc(var(--iu) * 1), calc(100% - var(--iu) * 2) calc(var(--iu) * 1), calc(100% - var(--iu) * 2) calc(var(--iu) * 2),
+    calc(100% - var(--iu) * 1) calc(var(--iu) * 2), calc(100% - var(--iu) * 1) calc(var(--iu) * 3), calc(100% - var(--iu) * 1) calc(var(--iu) * 4), 100% calc(var(--iu) * 4),
+    100% calc(100% - var(--iu) * 4), calc(100% - var(--iu) * 1) calc(100% - var(--iu) * 4), calc(100% - var(--iu) * 1) calc(100% - var(--iu) * 3), calc(100% - var(--iu) * 1) calc(100% - var(--iu) * 2),
+    calc(100% - var(--iu) * 2) calc(100% - var(--iu) * 2), calc(100% - var(--iu) * 2) calc(100% - var(--iu) * 1), calc(100% - var(--iu) * 4) calc(100% - var(--iu) * 1), calc(100% - var(--iu) * 4) 100%,
+    calc(var(--iu) * 4) 100%, calc(var(--iu) * 4) calc(100% - var(--iu) * 1), calc(var(--iu) * 2) calc(100% - var(--iu) * 1), calc(var(--iu) * 2) calc(100% - var(--iu) * 2),
+    calc(var(--iu) * 1) calc(100% - var(--iu) * 2), calc(var(--iu) * 1) calc(100% - var(--iu) * 3), calc(var(--iu) * 1) calc(100% - var(--iu) * 4), 0px calc(100% - var(--iu) * 4),
+    0px calc(var(--iu) * 4), calc(var(--iu) * 1) calc(var(--iu) * 4), calc(var(--iu) * 1) calc(var(--iu) * 3), calc(var(--iu) * 1) calc(var(--iu) * 2),
+    calc(var(--iu) * 2) calc(var(--iu) * 2), calc(var(--iu) * 2) calc(var(--iu) * 1), calc(var(--iu) * 4) calc(var(--iu) * 1), calc(var(--iu) * 4) 0px
+  );
+}
+.info:hover,
+.info.open {
+  opacity: 1;
+}
+/*
+  形と大きさを持つ本体。外側を灰色で塗り (= 縁)、1ドット内側に同じ形を暗い色で重ねる。
+  影 (filter) で縁を描くと、大きさが変わる途中で一瞬消えることがあるので図形で描く
+*/
+.info-shape {
+  position: relative;
+  width: var(--info-size);
+  height: var(--info-size);
+  overflow: hidden;
+  background: var(--info-gray);
+  clip-path: var(--round-outer);
+}
+.info-shape::before {
+  content: '';
+  position: absolute;
+  inset: var(--iu);
+  background: #2a2740;
+  clip-path: var(--round-inner);
+}
+/* 角の i (閉じているときはこれがボタン全体、開いているときは右下の角に残る) */
+.info-button {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: var(--info-size);
+  height: var(--info-size);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--info-gray);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+.info-button svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.info:hover .info-button,
+.info.open .info-button {
+  color: var(--info-gray-light);
+}
+.info-button:focus:not(:focus-visible) {
+  outline: none;
+}
+/* i ボタンの中は外側が切り取られるので、枠は内側に描く */
+.info :focus-visible {
+  outline-offset: -2px;
+}
+/* 中身 (右下の i に重ならないよう、下に余白) */
+.info-body {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  box-sizing: border-box;
+  width: max-content;
+  min-width: calc(var(--iu) * 110);
+  max-width: min(calc(var(--iu) * 180), calc(100vw - var(--iu) * 16));
+  padding: calc(var(--iu) * 8) calc(var(--iu) * 8) var(--info-size);
+  /*
+    文字は 12px (一番下の行は 11px)。大きさは絵の1ドット基準で計算しているので、
+    1px 単位に丸めて半端な大きさ (12.05px など) にならないようにする
+  */
+  --info-font: calc(var(--iu) * 6);
+  --info-font-small: calc(var(--iu) * 5.5);
+  font-size: var(--info-font);
+  font-size: round(var(--info-font), 1px);
+  line-height: 1.75;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.12s;
+}
+.info.show-body .info-body {
+  opacity: 1;
+  visibility: visible;
+}
+.info-body h2 {
+  margin: 0 0 calc(var(--iu) * 2);
+  font-size: inherit;
+  font-weight: normal;
+  color: var(--info-gray-light);
+}
+.info-body p {
+  margin: 0;
+}
+.info-body p + h2 {
+  margin-top: calc(var(--iu) * 6); /* 質問と質問の間 */
+}
+.info-links a {
+  /* 一番下の行の高さいっぱいを押せる範囲にする */
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--info-size);
+  color: var(--info-text-2);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: calc(var(--iu) * 1); /* 文字に近づけて、右の © と高さの釣り合いを取る */
+  -webkit-tap-highlight-color: transparent;
+}
+.info-links a:hover {
+  color: var(--info-hi);
+}
+.info-links a:focus:not(:focus-visible) {
+  outline: none;
+}
+/* 外部リンクの印: ドットの矢印 (↗) */
+.info-links a::after {
+  content: '';
+  display: inline-block;
+  width: calc(var(--iu) * 4);
+  height: calc(var(--iu) * 4);
+  margin-left: calc(var(--iu) * 4);
+  background: currentColor;
+  clip-path: polygon(20% 0, 100% 0, 100% 80%, 80% 80%, 80% 34%, 14% 100%, 0 86%, 66% 20%, 20% 20%);
+}
+/* 著作権表記: 小さく、一番下に離して */
+/*
+  一番下の行 (右端に i がある行): 左に GitHub、その右に著作権表記。i と高さをそろえる。
+  本文の下の余白 (= i の高さ) の中に収まる
+*/
+.info-foot {
+  position: absolute;
+  left: calc(var(--iu) * 8);
+  right: calc(var(--info-size) + var(--iu) * 2);
+  bottom: 0;
+  height: var(--info-size);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(var(--iu) * 6);
+}
+.info-foot,
+.info-foot .copy {
+  font-size: var(--info-font-small);
+  font-size: round(var(--info-font-small), 1px);
+}
+.info-foot .copy {
+  color: var(--info-gray);
+  white-space: nowrap;
+}
+/* 一覧の質問ボタン: 頭に小さなドットの三角 */
+.info-q {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--iu) * 4);
+  width: 100%;
+  min-height: calc(var(--iu) * 20);
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  color: var(--info-text);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+.info-q::before {
+  content: '';
+  flex: none;
+  width: calc(var(--iu) * 2);
+  height: calc(var(--iu) * 3);
+  background: var(--info-gray);
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+  transition: background-color 0.15s;
+}
+.info-q:hover {
+  color: var(--info-hi);
+}
+/* 質問の一覧と、一番下の行 (GitHub・著作権表記) の間 */
+.info-view[data-view="menu"] {
+  margin-bottom: calc(var(--iu) * 6);
+}
+.info-q:hover::before {
+  background: var(--info-gray-light);
+}
+/* 質問の画面の見出し: 左向きのドットの三角 + 質問。見出しごと押すと一覧に戻る */
+.info-back {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--iu) * 4);
+  min-height: calc(var(--iu) * 16);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  color: var(--info-text-2);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+.info-back::before {
+  content: '';
+  width: calc(var(--iu) * 2);
+  height: calc(var(--iu) * 3);
+  background: currentColor;
+  clip-path: polygon(100% 0, 0 50%, 100% 100%);
+}
+.info-back::before {
+  flex: none;
+}
+.info-back:hover {
+  color: var(--info-hi);
+}
+/* 回答と、一番下の ©2026 の間に、ちょうど1行分の空き */
+.info-answer {
+  margin-bottom: 1.7em !important;
+}
+.info-q:focus:not(:focus-visible), .info-back:focus:not(:focus-visible) {
+  outline: none;
+}
+.info-view[hidden] {
+  display: none;
+}
+/* スマホ (縦長) は絵の1ドットが小さいので、ドット数を増やしてほぼ同じ大きさにする */
+@media (orientation: portrait) {
+  .info { --info-dots: 5.2; }
+}
+
+/* 縦長の画面 (スマホ) の、絵が届くまでの色の横帯 */
+@media (orientation: portrait) {
+  canvas {
+    background: linear-gradient(to bottom, #424175 0.0% 6.25%, #444378 6.25% 12.5%, #46457a 12.5% 18.75%, #48467d 18.75% 25.0%, #4a487f 25.0% 31.25%, #4c4a82 31.25% 37.5%, #534e87 37.5% 43.75%, #54508a 43.75% 50.0%, #595490 50.0% 56.25%, #685b98 56.25% 62.5%, #8a669c 62.5% 68.75%, #c87e92 68.75% 75.0%, #c58488 75.0% 81.25%, #7a587b 81.25% 87.5%, #53416d 87.5% 93.75%, #443865 93.75% 100.0%);
+  }
+}
+
+/*
+  読み込み中の表示: 背景の絵を描き終える (scene-ready) まで、画面の真ん中に「読み込み中...」を出す。
+  文字は DotGothic16 を 16px で描いた形をそのままドット絵にした SVG (フォントの読み込みを待たずに出せる)。
+  フォントの 1 点 = 画面の 2px。「...」は 1 つずつ増えるコマ送り
+*/
+html:not(.scene-ready) body::before,
+html:not(.scene-ready) body::after {
+  content: '';
+  position: fixed;
+  top: 50%;
+  z-index: 20;
+  height: 30px;
+  margin-top: -15px;
+  background: no-repeat left bottom / 100% 100%;
+  pointer-events: none;
+}
+html:not(.scene-ready) body::before {
+  left: calc(50% - 99px);
+  width: 158px;
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 79 15' shape-rendering='crispEdges' fill='%23e6d9ee'><rect x='11' y='0' width='1' height='1'/><rect x='34' y='0' width='1' height='1'/><rect x='72' y='0' width='1' height='1'/><rect x='2' y='1' width='4' height='1'/><rect x='11' y='1' width='1' height='1'/><rect x='35' y='1' width='1' height='1'/><rect x='38' y='1' width='5' height='1'/><rect x='72' y='1' width='1' height='1'/><rect x='7' y='2' width='9' height='1'/><rect x='20' y='2' width='6' height='1'/><rect x='36' y='2' width='1' height='1'/><rect x='42' y='2' width='1' height='1'/><rect x='52' y='2' width='6' height='1'/><rect x='72' y='2' width='1' height='1'/><rect x='11' y='3' width='1' height='1'/><rect x='25' y='3' width='1' height='1'/><rect x='42' y='3' width='1' height='1'/><rect x='57' y='3' width='1' height='1'/><rect x='66' y='3' width='13' height='1'/><rect x='1' y='4' width='6' height='1'/><rect x='11' y='4' width='1' height='1'/><rect x='24' y='4' width='2' height='1'/><rect x='42' y='4' width='1' height='1'/><rect x='56' y='4' width='2' height='1'/><rect x='66' y='4' width='1' height='1'/><rect x='72' y='4' width='1' height='1'/><rect x='78' y='4' width='1' height='1'/><rect x='8' y='5' width='7' height='1'/><rect x='24' y='5' width='1' height='1'/><rect x='29' y='5' width='1' height='1'/><rect x='41' y='5' width='3' height='1'/><rect x='56' y='5' width='1' height='1'/><rect x='61' y='5' width='1' height='1'/><rect x='66' y='5' width='1' height='1'/><rect x='72' y='5' width='1' height='1'/><rect x='78' y='5' width='1' height='1'/><rect x='2' y='6' width='4' height='1'/><rect x='23' y='6' width='1' height='1'/><rect x='29' y='6' width='1' height='1'/><rect x='41' y='6' width='1' height='1'/><rect x='43' y='6' width='1' height='1'/><rect x='55' y='6' width='1' height='1'/><rect x='61' y='6' width='1' height='1'/><rect x='66' y='6' width='1' height='1'/><rect x='72' y='6' width='1' height='1'/><rect x='78' y='6' width='1' height='1'/><rect x='7' y='7' width='9' height='1'/><rect x='21' y='7' width='6' height='1'/><rect x='29' y='7' width='1' height='1'/><rect x='33' y='7' width='4' height='1'/><rect x='41' y='7' width='1' height='1'/><rect x='43' y='7' width='1' height='1'/><rect x='53' y='7' width='6' height='1'/><rect x='61' y='7' width='1' height='1'/><rect x='66' y='7' width='1' height='1'/><rect x='72' y='7' width='1' height='1'/><rect x='78' y='7' width='1' height='1'/><rect x='2' y='8' width='4' height='1'/><rect x='7' y='8' width='1' height='1'/><rect x='15' y='8' width='1' height='1'/><rect x='19' y='8' width='2' height='1'/><rect x='22' y='8' width='1' height='1'/><rect x='27' y='8' width='3' height='1'/><rect x='36' y='8' width='1' height='1'/><rect x='40' y='8' width='1' height='1'/><rect x='44' y='8' width='1' height='1'/><rect x='51' y='8' width='2' height='1'/><rect x='54' y='8' width='1' height='1'/><rect x='59' y='8' width='3' height='1'/><rect x='66' y='8' width='1' height='1'/><rect x='72' y='8' width='1' height='1'/><rect x='78' y='8' width='1' height='1'/><rect x='7' y='9' width='1' height='1'/><rect x='9' y='9' width='1' height='1'/><rect x='12' y='9' width='1' height='1'/><rect x='15' y='9' width='1' height='1'/><rect x='18' y='9' width='1' height='1'/><rect x='22' y='9' width='1' height='1'/><rect x='29' y='9' width='2' height='1'/><rect x='36' y='9' width='1' height='1'/><rect x='40' y='9' width='1' height='1'/><rect x='44' y='9' width='1' height='1'/><rect x='50' y='9' width='1' height='1'/><rect x='54' y='9' width='1' height='1'/><rect x='61' y='9' width='2' height='1'/><rect x='66' y='9' width='13' height='1'/><rect x='2' y='10' width='4' height='1'/><rect x='9' y='10' width='1' height='1'/><rect x='12' y='10' width='1' height='1'/><rect x='17' y='10' width='1' height='1'/><rect x='21' y='10' width='1' height='1'/><rect x='28' y='10' width='1' height='1'/><rect x='31' y='10' width='1' height='1'/><rect x='36' y='10' width='1' height='1'/><rect x='38' y='10' width='2' height='1'/><rect x='45' y='10' width='1' height='1'/><rect x='49' y='10' width='1' height='1'/><rect x='53' y='10' width='1' height='1'/><rect x='60' y='10' width='1' height='1'/><rect x='63' y='10' width='1' height='1'/><rect x='66' y='10' width='1' height='1'/><rect x='71' y='10' width='2' height='1'/><rect x='77' y='10' width='2' height='1'/><rect x='2' y='11' width='1' height='1'/><rect x='5' y='11' width='1' height='1'/><rect x='9' y='11' width='1' height='1'/><rect x='12' y='11' width='1' height='1'/><rect x='17' y='11' width='1' height='1'/><rect x='21' y='11' width='1' height='1'/><rect x='28' y='11' width='1' height='1'/><rect x='36' y='11' width='1' height='1'/><rect x='38' y='11' width='1' height='1'/><rect x='46' y='11' width='2' height='1'/><rect x='49' y='11' width='1' height='1'/><rect x='53' y='11' width='1' height='1'/><rect x='60' y='11' width='1' height='1'/><rect x='72' y='11' width='1' height='1'/><rect x='2' y='12' width='1' height='1'/><rect x='5' y='12' width='1' height='1'/><rect x='9' y='12' width='1' height='1'/><rect x='12' y='12' width='1' height='1'/><rect x='15' y='12' width='1' height='1'/><rect x='17' y='12' width='1' height='1'/><rect x='20' y='12' width='1' height='1'/><rect x='27' y='12' width='1' height='1'/><rect x='35' y='12' width='1' height='1'/><rect x='37' y='12' width='1' height='1'/><rect x='49' y='12' width='1' height='1'/><rect x='52' y='12' width='1' height='1'/><rect x='59' y='12' width='1' height='1'/><rect x='72' y='12' width='1' height='1'/><rect x='2' y='13' width='4' height='1'/><rect x='8' y='13' width='1' height='1'/><rect x='12' y='13' width='1' height='1'/><rect x='15' y='13' width='1' height='1'/><rect x='18' y='13' width='2' height='1'/><rect x='26' y='13' width='1' height='1'/><rect x='34' y='13' width='1' height='1'/><rect x='38' y='13' width='2' height='1'/><rect x='50' y='13' width='2' height='1'/><rect x='58' y='13' width='1' height='1'/><rect x='72' y='13' width='1' height='1'/><rect x='2' y='14' width='1' height='1'/><rect x='6' y='14' width='2' height='1'/><rect x='13' y='14' width='2' height='1'/><rect x='24' y='14' width='2' height='1'/><rect x='33' y='14' width='1' height='1'/><rect x='40' y='14' width='8' height='1'/><rect x='56' y='14' width='2' height='1'/><rect x='72' y='14' width='1' height='1'/></svg>");
+}
+html:not(.scene-ready) body::after {
+  left: calc(50% - 99px + 158px);
+  width: 40px;
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 15' shape-rendering='crispEdges' fill='%23e6d9ee'><rect x='2' y='11' width='2' height='1'/><rect x='10' y='11' width='2' height='1'/><rect x='18' y='11' width='2' height='1'/><rect x='2' y='12' width='2' height='1'/><rect x='10' y='12' width='2' height='1'/><rect x='18' y='12' width='2' height='1'/></svg>");
+  animation: loading-dots 1.2s steps(1, end) infinite;
+}
+@keyframes loading-dots {
+  0%   { clip-path: inset(0 100% 0 0); }
+  25%  { clip-path: inset(0 32px 0 0); }
+  50%  { clip-path: inset(0 16px 0 0); }
+  75%  { clip-path: inset(0 0 0 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  html:not(.scene-ready) body::after { animation: none; }
+}
