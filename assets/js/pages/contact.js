@@ -3,9 +3,6 @@ const form = document.getElementById('contact-form');
 const status = document.getElementById('form-status');
 const thanks = document.getElementById('thanks');
 const button = form.querySelector('.send');
-// 開いてすぐの送信はロボットとみなす (サーバー側で判定)。
-// 経過時間はページの中の時計で測る (端末の時計のずれに左右されない)
-const openedAt = performance.now();
 const ERRORS = {
   empty: '内容を書いてください',
   email: 'メールアドレスの形を確かめてください',
@@ -31,7 +28,7 @@ form.addEventListener('submit', async e => {
     const res = await fetch('/api/contact', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...data, elapsed: Math.round(performance.now() - openedAt) }),
+      body: JSON.stringify(data),
     });
     const body = await res.json().catch(() => ({}));
     if (!res.ok || !body.ok) throw new Error(body.error || res.status);

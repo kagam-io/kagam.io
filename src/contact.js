@@ -1,13 +1,13 @@
 // お問い合わせフォームの受け付け (Cloudflare Workers)
-//   POST /api/contact  { name, email, message, leave_empty (わな), elapsed, 'cf-turnstile-response' }
+//   POST /api/contact  { name, email, message, leave_empty (わな), 'cf-turnstile-response' }
 //   中身を確かめて、Email Routing で自分宛てにメールを送る。
 // 外とやりとりする処理は worker.js から渡す (テストや手元の確認で差し替えられるように)
 //   send(mail)          … メールを送る
 //   limit(ip)           … 送信回数の制限。超えていたら false (省略可)
-//   verify(token, ip)   … Turnstile の人間確認。通らなければ false (省略可)
+//   verify(token, ip)   … Turnstile の人間確認。通らなければ false (必須。無ければ送らない)
 
 const LIMITS = { name: 60, email: 120, message: 3000 };
-const MIN_FILL_MS = 3000; // 開いてからこれより早い送信はロボットとみなす
+const MAX_BODY = 20000; // 受け付ける本文の大きさ (バイト)
 
 const json = (status, body) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json; charset=utf-8' } });
@@ -46,27 +46,53 @@ export function buildMail({ from, to, name, email, message, now = new Date() }) 
   return headers.join('\r\n') + '\r\n\r\n' + b64(body).replace(/.{1,76}/g, '$&\r\n');
 }
 
+// 本文を読みながら数え、max バイトを超えたらそこで読むのをやめて null を返す
+// (Content-Length のヘッダーは送り手が省けるので、それだけには頼らない)
+async function readBody(request, max) {
+  if (!request.body) return '';
+  const reader = request.body.getReader();
+  const chunks = [];
+  let size = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > max) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(value);
+  }
+  const all = new Uint8Array(size);
+  let at = 0;
+  for (const c of chunks) { all.set(c, at); at += c.byteLength; }
+  return new TextDecoder().decode(all);
+}
+
 export async function handleContact(request, { from, to, send, limit, verify }) {
   if (request.method !== 'POST') return json(405, { ok: false, error: 'method' });
-  if (!to) return json(500, { ok: false, error: 'config' }); // 届け先 (シークレット CONTACT_TO) が未設定
-  if (Number(request.headers.get('Content-Length') || 0) > 20000) return json(413, { ok: false, error: 'too-long' });
+  // 届け先 (シークレット CONTACT_TO) か人間確認 (TURNSTILE_SECRET) が無ければ送らない
+  if (!to || !verify) return json(500, { ok: false, error: 'config' });
+  if (Number(request.headers.get('Content-Length') || 0) > MAX_BODY) return json(413, { ok: false, error: 'too-long' });
   const ip = request.headers.get('CF-Connecting-IP') || '';
 
   // 同じ送り元から短い間に何通も送れないようにする
   if (limit && !(await limit(ip))) return json(429, { ok: false, error: 'rate' });
 
+  const text = await readBody(request, MAX_BODY);
+  if (text === null) return json(413, { ok: false, error: 'too-long' });
   let data;
   try {
-    data = await request.json();
+    data = JSON.parse(text);
   } catch {
     return json(400, { ok: false, error: 'invalid' });
   }
-  // わなの欄が埋まっている・早すぎる → 受け付けたふりをして何もしない
-  // elapsed はページを開いてからの経過時間 (ブラウザの中だけで測る。端末の時計がずれていても狂わない)
-  if (data.leave_empty || !(Number(data.elapsed) >= MIN_FILL_MS)) return json(200, { ok: true });
+  if (!data || typeof data !== 'object') return json(400, { ok: false, error: 'invalid' });
+  // わなの欄 (人には見えない) が埋まっている → ロボット。受け付けたふりをして何もしない
+  if (data.leave_empty) return json(200, { ok: true });
 
   // Turnstile (目に見えない人間確認)
-  if (verify && !(await verify(String(data['cf-turnstile-response'] || ''), ip))) {
+  if (!(await verify(String(data['cf-turnstile-response'] || ''), ip))) {
     return json(403, { ok: false, error: 'captcha' });
   }
 

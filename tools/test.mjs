@@ -57,7 +57,7 @@ function setup({ verify = async t => t === 'ok', limitPerIp = 3 } = {}) {
   }), opts);
   return { sent, post, opts };
 }
-const ok = { message: 'こんにちは', elapsed: 10000, 'cf-turnstile-response': 'ok' }; // 開いてから十分たった送信
+const ok = { message: 'こんにちは', 'cf-turnstile-response': 'ok' };
 
 test('正しい送信だけがメールになる', async () => {
   const { sent, post } = setup();
@@ -68,9 +68,13 @@ test('正しい送信だけがメールになる', async () => {
 test('ロボットらしい送信は、受け付けたふりをして送らない', async () => {
   const { sent, post } = setup();
   assert.equal((await post({ ...ok, leave_empty: 'http://spam' })).status, 200); // わなの欄が埋まっている
-  assert.equal((await post({ ...ok, elapsed: 500 })).status, 200);               // 開いてすぐ送った
-  assert.equal((await post({ ...ok, elapsed: undefined })).status, 200);         // 経過時間が無い
   assert.equal(sent.length, 0);
+});
+
+test('開いてすぐ (貼り付けてすぐ) 送っても、人間確認を通ればメールになる', async () => {
+  const { sent, post } = setup();
+  assert.equal((await post(ok)).status, 200);
+  assert.equal(sent.length, 1);
 });
 
 test('入力のまちがいはエラーで返す', async () => {
@@ -102,10 +106,21 @@ test('同じ送り元からは決まった数までしか送れない', async ()
   assert.equal((await post(ok, '5.6.7.8')).status, 200); // 別の送り元からは送れる
 });
 
-test('届け先が設定されていなければ送らない', async () => {
-  const { opts } = setup();
-  const res = await handleContact(new Request('https://kagam.io/api/contact', { method: 'POST', body: '{}' }), { ...opts, to: '' });
-  assert.equal(res.status, 500);
+test('届け先か人間確認の設定が無ければ送らない', async () => {
+  const { sent, opts } = setup();
+  const req = () => new Request('https://kagam.io/api/contact', { method: 'POST', body: JSON.stringify(ok) });
+  assert.equal((await handleContact(req(), { ...opts, to: '' })).status, 500);
+  assert.equal((await handleContact(req(), { ...opts, verify: null })).status, 500); // TURNSTILE_SECRET が無い
+  assert.equal(sent.length, 0);
+});
+
+test('大きすぎる本文は、ヘッダーで大きさを伝えてこなくても途中で断る', async () => {
+  const { sent, opts } = setup();
+  const big = JSON.stringify({ ...ok, message: 'あ'.repeat(10000) }); // 3万バイトほど
+  const stream = new ReadableStream({ start(c) { c.enqueue(new TextEncoder().encode(big)); c.close(); } });
+  const res = await handleContact(new Request('https://kagam.io/api/contact', { method: 'POST', body: stream, duplex: 'half' }), opts);
+  assert.equal(res.status, 413);
+  assert.equal(sent.length, 0);
 });
 
 test('名前に改行を混ぜても、メールのヘッダーは増やせない', () => {
