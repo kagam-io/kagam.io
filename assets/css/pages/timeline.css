@@ -90,25 +90,6 @@
   100% { transform: translateX(0); }
 }
 
-/* リリースの星: 星そのものが1px跳ね、明るさをコマ送りで変える。
-   きらめきの粒は作らず、他の印と同じアニメーション周期にする */
-@keyframes release-glint {
-  0%     { transform: translateY(0); background-color: #ffe6a8; }
-  5.3%   { transform: translateY(-1px); background-color: #fffdf1; }
-  10.7%  { transform: translateY(0); background-color: #ffe6a8; }
-  16%    { transform: translateY(-1px); background-color: #fff7d4; }
-  21.3%  { transform: translateY(0); background-color: #ffe6a8; }
-  100%   { transform: translateY(0); background-color: #ffe6a8; }
-}
-@keyframes release-glint-again {
-  0%     { transform: translateY(0); background-color: #ffe6a8; }
-  5.3%   { transform: translateY(-1px); background-color: #fffdf1; }
-  10.7%  { transform: translateY(0); background-color: #ffe6a8; }
-  16%    { transform: translateY(-1px); background-color: #fff7d4; }
-  21.3%  { transform: translateY(0); background-color: #ffe6a8; }
-  100%   { transform: translateY(0); background-color: #ffe6a8; }
-}
-
 /* ページを開いたときに2回動いて止まる。マウスを乗せている間はくり返す */
 @media (prefers-reduced-motion: no-preference) {
   .entry.type-note::before {
@@ -116,9 +97,6 @@
   }
   .entry.type-zenn::before {
     animation: zenn-shake 1.8s steps(1, end) 0.4s 2;
-  }
-  .entry.type-release::before {
-    animation: release-glint 1.8s steps(1, end) 0.4s 2;
   }
 }
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
@@ -128,14 +106,48 @@
   .entry.type-zenn:hover::before {
     animation: zenn-shake-again 1.8s steps(1, end) infinite;
   }
-  .entry.type-release:hover::before {
-    animation: release-glint-again 1.8s steps(1, end) infinite;
-  }
 }
 /* 印の下の小さな種類名 */
 .entry-kind {
   margin-left: 8px;
   color: var(--mark-color);
+}
+/* リリースの星の周囲だけに、以前と同じ十字と点のきらめきを表示する。 */
+.entry.type-release::after {
+  content: '';
+  position: absolute;
+  left: -2px;
+  top: 1px;
+  width: 2px;
+  height: 2px;
+}
+@keyframes star-twinkle {
+  0% { box-shadow: -7px 4px 0 0 #fff3df, -9px 4px 0 0 #fff3df, -5px 4px 0 0 #fff3df, -7px 2px 0 0 #fff3df, -7px 6px 0 0 #fff3df, 19px 13px 0 0 #ffe6a8, 12px -4px 0 0 #ffe6a8; }
+  18% { box-shadow: -7px 4px 0 0 #fff3df; }
+  30% { box-shadow: none; }
+  50% { box-shadow: 21px 0px 0 0 #fff3df, 19px 0px 0 0 #fff3df, 23px 0px 0 0 #fff3df, 21px -2px 0 0 #fff3df, 21px 2px 0 0 #fff3df, -6px 15px 0 0 #ffe6a8, 3px -5px 0 0 #ffe6a8; }
+  68% { box-shadow: 21px 0px 0 0 #fff3df; }
+  80% { box-shadow: none; }
+}
+/* ホバー時は別名の同じアニメーションを使用し、最初から再生する */
+@keyframes star-twinkle-again {
+  0% { box-shadow: -7px 4px 0 0 #fff3df, -9px 4px 0 0 #fff3df, -5px 4px 0 0 #fff3df, -7px 2px 0 0 #fff3df, -7px 6px 0 0 #fff3df, 19px 13px 0 0 #ffe6a8, 12px -4px 0 0 #ffe6a8; }
+  18% { box-shadow: -7px 4px 0 0 #fff3df; }
+  30% { box-shadow: none; }
+  50% { box-shadow: 21px 0px 0 0 #fff3df, 19px 0px 0 0 #fff3df, 23px 0px 0 0 #fff3df, 21px -2px 0 0 #fff3df, 21px 2px 0 0 #fff3df, -6px 15px 0 0 #ffe6a8, 3px -5px 0 0 #ffe6a8; }
+  68% { box-shadow: 21px 0px 0 0 #fff3df; }
+  80% { box-shadow: none; }
+}
+/* Zenn/その他と同じく、初回2回・ホバー中は繰り返す */
+@media (prefers-reduced-motion: no-preference) {
+  .entry.type-release::after {
+    animation: star-twinkle 1.8s steps(1, end) 0.4s 2;
+  }
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .entry.type-release:hover::after {
+    animation: star-twinkle-again 1.8s steps(1, end) infinite;
+  }
 }
 .entry-date {
   display: block;
