@@ -72,9 +72,7 @@
   100% { -webkit-mask-image: url("/assets/img/marks/circle.svg"); mask-image: url("/assets/img/marks/circle.svg"); }
 }
 
-/*
-  Zenn のマーク: 左右に 1px ずつ、カクカクと小刻みに震える
-*/
+/* Zenn のマーク: 左右に 1px ずつ、カクカクと小刻みに震える */
 @keyframes zenn-shake {
   0%   { transform: translateX(-1px); }
   5.3%   { transform: translateX(1px); }
@@ -92,6 +90,25 @@
   100% { transform: translateX(0); }
 }
 
+/* リリースの星: 星そのものが1px跳ね、明るさをコマ送りで変える。
+   きらめきの粒は作らず、他の印と同じアニメーション周期にする */
+@keyframes release-glint {
+  0%     { transform: translateY(0); background-color: #ffe6a8; }
+  5.3%   { transform: translateY(-1px); background-color: #fffdf1; }
+  10.7%  { transform: translateY(0); background-color: #ffe6a8; }
+  16%    { transform: translateY(-1px); background-color: #fff7d4; }
+  21.3%  { transform: translateY(0); background-color: #ffe6a8; }
+  100%   { transform: translateY(0); background-color: #ffe6a8; }
+}
+@keyframes release-glint-again {
+  0%     { transform: translateY(0); background-color: #ffe6a8; }
+  5.3%   { transform: translateY(-1px); background-color: #fffdf1; }
+  10.7%  { transform: translateY(0); background-color: #ffe6a8; }
+  16%    { transform: translateY(-1px); background-color: #fff7d4; }
+  21.3%  { transform: translateY(0); background-color: #ffe6a8; }
+  100%   { transform: translateY(0); background-color: #ffe6a8; }
+}
+
 /* ページを開いたときに2回動いて止まる。マウスを乗せている間はくり返す */
 @media (prefers-reduced-motion: no-preference) {
   .entry.type-note::before {
@@ -99,6 +116,9 @@
   }
   .entry.type-zenn::before {
     animation: zenn-shake 1.8s steps(1, end) 0.4s 2;
+  }
+  .entry.type-release::before {
+    animation: release-glint 1.8s steps(1, end) 0.4s 2;
   }
 }
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
@@ -108,47 +128,14 @@
   .entry.type-zenn:hover::before {
     animation: zenn-shake-again 1.8s steps(1, end) infinite;
   }
+  .entry.type-release:hover::before {
+    animation: release-glint-again 1.8s steps(1, end) infinite;
+  }
 }
 /* 印の下の小さな種類名 */
 .entry-kind {
   margin-left: 8px;
   color: var(--mark-color);
-}
-/* 一番新しい項目の印の周りのきらめき: 十字と点が場所を変えながら光る (段階的に消える) */
-.entry.latest::after {
-  content: '';
-  position: absolute;
-  left: -2px;
-  top: 1px;
-  width: 2px;
-  height: 2px;
-  /* 開いたときに2回だけきらめいて止まる。マウスを乗せている間はきらめき続ける */
-  animation: star-twinkle 1.8s steps(1, end) 0.4s 2;
-}
-@keyframes star-twinkle {
-  0% { box-shadow: -7px 4px 0 0 #fff3df, -9px 4px 0 0 #fff3df, -5px 4px 0 0 #fff3df, -7px 2px 0 0 #fff3df, -7px 6px 0 0 #fff3df, 19px 13px 0 0 #ffe6a8, 12px -4px 0 0 #ffe6a8; }
-  18% { box-shadow: -7px 4px 0 0 #fff3df; }
-  30% { box-shadow: none; }
-  50% { box-shadow: 21px 0px 0 0 #fff3df, 19px 0px 0 0 #fff3df, 23px 0px 0 0 #fff3df, 21px -2px 0 0 #fff3df, 21px 2px 0 0 #fff3df, -6px 15px 0 0 #ffe6a8, 3px -5px 0 0 #ffe6a8; }
-  68% { box-shadow: 21px 0px 0 0 #fff3df; }
-  80% { box-shadow: none; }
-}
-/* 同じ動き。名前を変えて、マウスを乗せたときに最初から再生し直す */
-@keyframes star-twinkle-again {
-  0% { box-shadow: -7px 4px 0 0 #fff3df, -9px 4px 0 0 #fff3df, -5px 4px 0 0 #fff3df, -7px 2px 0 0 #fff3df, -7px 6px 0 0 #fff3df, 19px 13px 0 0 #ffe6a8, 12px -4px 0 0 #ffe6a8; }
-  18% { box-shadow: -7px 4px 0 0 #fff3df; }
-  30% { box-shadow: none; }
-  50% { box-shadow: 21px 0px 0 0 #fff3df, 19px 0px 0 0 #fff3df, 23px 0px 0 0 #fff3df, 21px -2px 0 0 #fff3df, 21px 2px 0 0 #fff3df, -6px 15px 0 0 #ffe6a8, 3px -5px 0 0 #ffe6a8; }
-  68% { box-shadow: 21px 0px 0 0 #fff3df; }
-  80% { box-shadow: none; }
-}
-@media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  .entry.latest:hover::after {
-    animation: star-twinkle-again 1.8s steps(1, end) infinite; /* 乗せている間ずっと */
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .entry.latest::after { animation: none; }
 }
 .entry-date {
   display: block;
@@ -156,6 +143,10 @@
   color: var(--text-2);
   font-size: 13px;
   line-height: 1.4;
+}
+/* 改行を含む説明文をそのまま複数行で表示する */
+.entry-desc {
+  white-space: pre-line;
 }
 /* パネル共通の見出し (h2) の四角い印やピンク色は使わない */
 .window .entry-title {
@@ -186,7 +177,7 @@
   border: 0;
   background: none;
   font: inherit;
-  color: var(--text-3); /* 選ばれていないときの灰色 */
+  color: var(--text-3);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: color 0.12s;
@@ -196,8 +187,8 @@
 }
 .filter.on { color: var(--c); }
 @media (hover: hover) {
-  .filter:hover { color: var(--c); }           /* 灰色のものは、その色に */
-  .filter.on:hover { color: var(--c-hover); }  /* 光っているものは、もう少し明るく */
+  .filter:hover { color: var(--c); }
+  .filter.on:hover { color: var(--c-hover); }
 }
 .filter[data-type="release"] { --c: #ffe6a8; --c-hover: #fff6d6; }
 .filter[data-type="zenn"]    { --c: #8abeff; --c-hover: #c3ddff; }

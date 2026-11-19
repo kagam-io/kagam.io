@@ -62,14 +62,13 @@ function applyFilter() {
     b.classList.toggle('on', on);
     b.setAttribute('aria-pressed', String(on));
   });
-  let first = null, last = null, shown = 0;
+  let last = null, shown = 0;
   for (const li of list.children) {
     const show = all || selected.has(li.dataset.type);
     li.hidden = !show;
-    li.classList.remove('latest', 'last-visible');
-    if (show) { shown++; first ??= li; last = li; }
+    li.classList.remove('last-visible');
+    if (show) { shown++; last = li; }
   }
-  first?.classList.add('latest');      // きらめきは見えている一番上の項目に
   last?.classList.add('last-visible'); // 一番下の項目の下には点線を描かない
   status.textContent = !hasItems ? 'まだ何もありません' : shown ? '' : 'この種類はまだありません';
 }
